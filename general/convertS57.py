@@ -8,7 +8,8 @@
 # are converted to string field types and the content of the field is 
 # converted to a comma seprated string.
 #
-# Each input chart containing a coastline results in a shapefile.
+# Each input chart containing a coastline results in a shapefile. The shapefiles
+# are then combined into a composite shapefile.
 #
 # Useful open source Python reference https://livebook.manning.com/book/geoprocessing-with-python/chapter-3/126
 #
@@ -28,7 +29,7 @@ import logging as log
 t0 = time.time()
 
 # parentFolder from which all content within subfolders is searched for s57 data
-parentFolder = input("Enter the top folder: ")
+parentFolder = input("Enter the top folder to search within for s57 data: ")
 while not os.path.exists(f'{parentFolder}'):# Test to make sure an input was provided
     print('No existing top folder provided...')
     parentFolder = input("\tEnter the top folder: ")
