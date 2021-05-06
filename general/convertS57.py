@@ -8,7 +8,8 @@
 # are converted to string field types and the content of the field is 
 # converted to a comma seprated string.
 #
-# Each input chart containing a coastline results in a shapefile.
+# Each input chart containing a coastline results in a shapefile. The shapefiles
+# are then combined into a composite shapefile.
 #
 # Useful open source Python reference https://livebook.manning.com/book/geoprocessing-with-python/chapter-3/126
 #
