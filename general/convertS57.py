@@ -29,7 +29,7 @@ import logging as log
 t0 = time.time()
 
 # parentFolder from which all content within subfolders is searched for s57 data
-parentFolder = input("Enter the top folder: ")
+parentFolder = input("Enter the top folder to search within for s57 data: ")
 while not os.path.exists(f'{parentFolder}'):# Test to make sure an input was provided
     print('No existing top folder provided...')
     parentFolder = input("\tEnter the top folder: ")
