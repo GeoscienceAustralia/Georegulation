@@ -46,7 +46,7 @@ os.mkdir(outFolder)
 shutil.copy2(sys.argv[0], outFolder)
 
 # Establish the log file
-logfile = os.path.join(outFolder,r'logfile.log')
+logfile = os.path.join(outFolder, r'logfile.log')
 
 #os.path.join(os.path.split(workspace)[0],r'logfile.log')
 log.basicConfig(filename=logfile,
@@ -174,7 +174,7 @@ for root, folder, files in os.walk(parentFolder):
                 shpDriver = ogr.GetDriverByName("ESRI Shapefile")
                 shpDS = shpDriver.CreateDataSource(outSHP)
                 # Create line layer to match the CRS of the source data
-                shpLayer = shpDS.CreateLayer(f, proj,geom_type=ogr.wkbLineString)
+                shpLayer = shpDS.CreateLayer(f, proj, geom_type=ogr.wkbLineString)
                 # Create the attribute table to match the in memory schema
                 shpLayer.CreateFields(memLayer.schema)
                 shp_defn = shpLayer.GetLayerDefn()

@@ -12,14 +12,24 @@ print('Script started...')
 import arcpy
 import os
 import sys
+import shutil
 
 print(f'\tModules imported: {round(time.time() - t0, 2)} seconds')
 
 folder = input("Enter the folder to search within for tif files: ")
-outputFolder = os.path.join(os.path.split(folder)[0],r'Tas_Coastline_GeoTIFFs_mga55Derived')
+# name for the folder and the mosaic tif file
+name = input("Enter the name for the folder which will also be used for the tif file:")
+outputFolder = os.path.join(os.path.split(folder)[0], name)
 
-if not os.path.exists(folder) or not os.path.exists(outputFolder):
-    sys.exit('Input or output folder does not exist')
+if not os.path.exists(folder):
+    sys.exit('Input folder does not exist')
+
+# Create outputFolder if it does not exist.
+if not os.path.exists(outputFolder):
+    os.mkdir(outputFolder)
+
+# Save the script to the outFolder to store with the outputs
+shutil.copy2(sys.argv[0], outputFolder)
 
 # Coordinate Reference System dictionary. Key is CRS, value is a list of file name(s)
 crsDict = {}
@@ -61,7 +71,7 @@ inputTifs = ';'.join(fileList)
 print('\tDone.')
 #
 print('Starting mosaic process...')
-arcpy.MosaicToNewRaster_management(inputTifs, outputFolder, "Tas_Coastline_GeoTIFFs_mga55Mosaic.tif",\
+arcpy.MosaicToNewRaster_management(inputTifs, outputFolder, f"{name}.tif",\
                                    pixel_type='8_BIT_UNSIGNED', mosaic_method='FIRST', number_of_bands=3)
 
 print(f'Script finished ({(round(time.time() - t0)/60, 2)} minutes)')
