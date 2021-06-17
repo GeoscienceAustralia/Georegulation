@@ -92,6 +92,8 @@ verbose = False
 # S57 feature type to extract
 featureToExtract = 'CBLSUB'
 # featureToExtract = 'COALNE'
+# featureToExtract = 'RESARE'
+
 # TODO: user input for featureToExtract does not seem to work, investigate.
 # featureToExtract = parentFolder = input("Enter the s57 feature type (e.g. 'CBLSUB' = submarine cables, 'COALNE' = coastline): ")
 # print(f'feature type to extract: {featureToExtract}, feature type: {type(featureToExtract)}')
@@ -104,6 +106,7 @@ featureToExtract = 'CBLSUB'
 # to a linestring, this will fail if extracting a point feature unless it is
 # changed by the user to the correct geometry type
 geomType = ogr.wkbLineString
+# geomType = ogr.wkbPolygon
 
 # Create folder to store coastline extracts with a date time stamp
 folderDateTime = f"_{datetime.datetime.now().strftime('%d_%m_%Y_%Hh%Mm%Ss')}"
