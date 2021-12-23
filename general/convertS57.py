@@ -13,7 +13,7 @@
 # are then combined into a composite shapefile.
 #
 # A folder is created at the same level as the input parent folder from which the scipt starts searching for .000 files.
-# The folder contains the national shapefile, the Python script, a log file and a subfolder of the invidividual
+# The folder contains the national shapefile, the Python script, a log file and a subfolder of the individual
 # shapefiles, one for each input .000 file that contains the feature of interest.
 # Useful open source Python reference https://livebook.manning.com/book/geoprocessing-with-python/chapter-3/126
 #
@@ -90,9 +90,10 @@ while not os.path.exists(f'{parentFolder}'):# Test to make sure an input was pro
 verbose = False
 
 # S57 feature type to extract
-featureToExtract = 'CBLSUB'
+# featureToExtract = 'CBLSUB'
 # featureToExtract = 'COALNE'
 # featureToExtract = 'RESARE'
+featureToExtract = 'DEPCNT' # depth contour features
 
 # TODO: user input for featureToExtract does not seem to work, investigate.
 # featureToExtract = parentFolder = input("Enter the s57 feature type (e.g. 'CBLSUB' = submarine cables, 'COALNE' = coastline): ")
@@ -134,7 +135,7 @@ log.info('Script started: ' + sys.argv[0])
 # Log the parent folder to the logfile
 log.info('Parent folder to find s57 data within: ' + parentFolder)
 
-# Flag that sets to True once the memory layer is used
+# Flag that sets to True once the memory layer is used. User not required to change this.
 memLayersUsed = False
 
 s57Driver = ogr.GetDriverByName("S57")
@@ -480,7 +481,7 @@ log.info(f'Composite shapefile complete: {nationalShp}')
 print(f'n\outFolder for national shape file: {outFolder}')
 print('\tComposite complete.')
                 
-print(f'\n{len(chartList)} charts found')
+print(f'\n{len(tiftList)} charts found')
 print(f'\t{len(chartsNoFeatureList)} charts with no {featureToExtract} layer')
 print(f'S57 source data containing {featureToExtract}:')
 for g in failS57SourceList:
@@ -489,7 +490,7 @@ for g in failS57SourceList:
     
 print(f'\nScript completed in {round((time.time() - t0)/60, 2)} minutes')
 
-log.info(f'{len(chartList)} charts found')
+log.info(f'{len(tiftList)} charts found')
 log.info(f'{len(chartsNoFeatureList)} charts with no {featureToExtract} layer')
 log.info(f'Script completed in {round((time.time() - t0)/60, 2)} minutes')
 
