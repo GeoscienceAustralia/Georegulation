@@ -30,7 +30,7 @@ import logging as log
 
 def rasterCharacteristics(raster):
     '''
-    Input is
+    Input is GDAL raster object
     :param raster: GDAL raster object
     :return: Raster characteristics defined in a dictionary: 'ulx': upper left x coordinatel, 'uly': upper left
     coordinate, 'xres': x resolution, 'yres': y resolution, 'xskew': x skew, 'yskew': y skew, 'srs': well-known text
@@ -61,7 +61,7 @@ def rasterCharacteristics(raster):
     print(f'\t\tX resolution: {xres}')
     print(f'\t\tY resolution: {yres}')
 
-    md = raster.GetMetadata()
+    # md = raster.GetMetadata()
     # print(f'\t\tMetadata: {md}')
 
     # Get the Coordinate Reference System (CRS) of the layer
