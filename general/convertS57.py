@@ -6,10 +6,10 @@
 #
 # Each input ENC file containing a feature/geometry type of interest results in a shapefile named per the source
 # S57 ENC file. The shapefiles are then combined into a composite shapefile which is labelled
-# 'national'_FEATURETYPE_GEOMETRYTYPE.shp, e.g. 'national_ACHARE_POINT.shp', 'national_CBLSUB_LINESTRING.shp'.
+# 'global'_FEATURETYPE_GEOMETRYTYPE.shp, e.g. 'global_ACHARE_POINT.shp', 'global_CBLSUB_LINESTRING.shp'.
 #
 # A folder is created at the same level as the input parent folder from which the script starts searching for .000 files.
-# The folder contains the national shapefile, the Python script, a log file and a subfolder of the individual
+# The folder contains the global shapefile, the Python script, a log file and a subfolder of the individual
 # shapefiles, one for each input .000 file that contains the feature of interest.
 # Useful open source Python reference https://livebook.manning.com/book/geoprocessing-with-python/chapter-3/126
 #
@@ -123,9 +123,9 @@ def chartGetter(topFolder):
 # Set intial time
 t0 = time.time()
 # TODO: User to set printing to verbose for more print statements to support debugging
-verbose = True
+verbose = False
 
-# The default is for s57 update files (e.g. .001, .002, .003, ..., .00N) to be applied to the .001 file that this script
+# The default is for s57 update files (e.g. .001, .002, .003, ..., .00N) to be applied to the .000 file that this script
 # finds and reads. Applying updates is set to ensure updates are applied.
 # https://gdal.org/drivers/vector/s57.html
 os.environ["OGR_S57_OPTIONS"] = "UPDATES=ON"
@@ -171,9 +171,10 @@ else:
     # Manual setting of features to extract
     # Priority 'Skin of the Earth' features for charting (Group 1) are:
     # 'DEPARE', 'DRGARE', 'FLODOC', 'HULKES', 'LNDARE', 'PONTON', 'UNSARE'
-    featureToExtractList = ['CBLSUB', 'COALNE', 'RESARE', 'DEPCNT', 'SBDARE', 'SOUNDG', 'DEPARE', 'LNDARE', 'LNDELV',
-                            'UNSARE', "BUISGL", 'UWTROC', 'BCNCAR', 'BCNISD', 'BCNLAT', 'BCNSAW', 'BCNSPP', 'CBLARE',
-                            'PIPSOL', 'PIPARE']
+    # featureToExtractList = ['CBLSUB', 'COALNE', 'RESARE', 'DEPCNT', 'SBDARE', 'SOUNDG', 'DEPARE', 'LNDARE', 'LNDELV',
+    #                         'UNSARE', "BUISGL", 'UWTROC', 'BCNCAR', 'BCNISD', 'BCNLAT', 'BCNSAW', 'BCNSPP', 'CBLARE',
+    #                         'PIPSOL', 'PIPARE']
+    featureToExtractList = ['SOUNDG', 'LNDARE', 'LNDELV']
 
 print('Feature type list:')
 for f in featureToExtractList:
@@ -207,18 +208,29 @@ os.makedirs(extractRoot)
 logfile = os.path.join(extractRoot, rf'featureExtraction_logfile_{folderDateTime}.log')
 print(f'Logfile in: {logfile}')
 
+log.basicConfig(filename=logfile,
+                    level=log.DEBUG,
+                    filemode='w',# 'w' = overwrite log file, 'a' = append
+                    format='%(asctime)s,   Line:%(lineno)d %(levelname)s: %(message)s',
+                    datefmt='%a %d/%b/%Y %I:%M:%S %p')
+# Log the path and name of the script used to the logfile
+log.info('Script started: ' + sys.argv[0])
+# Log the parent folder to the logfile
+log.info('Parent folder to find s57 data within: ' + parentFolder)
 
 # Save the script to the outFolder to store with the outputs
 shutil.copy2(sys.argv[0], extractRoot)
 
-# Copy the example QGIS project which includes example AHO S.57 data, ENC/chart webservices and the ESRI World Image
+# Copy the example QGIS project which includes example S.57 data, ENC/chart webservices and the ESRI World Image
 # basemap to the output data folder. Users can then trace the source to feature/geometry type extractions including the
-# chart specific and national compilations.
-if os.path.exists(os.path.join(os.path.split(extractRoot)[], 'qgis')):
-    shutil.copy2(os.path.join(os.path.split(extractRoot)[], 'qgis'), os.path.join(extractRoot, 'qgis'))
+# chart specific and global compilations.
+if os.path.exists(os.path.join(os.path.split(extractRoot)[0], 'qgis')):
+    print(f'Copying QGIS folder: {os.path.join(os.path.split(extractRoot)[0],"qgis")}')
+    print(f'To {os.path.join(extractRoot, "qgis")}')
+    shutil.copytree(os.path.join(os.path.split(extractRoot)[0], 'qgis'), os.path.join(extractRoot, 'qgis'))
     log.info(f'Copied example QGIS project to: {extractRoot}\qgis')
 else:
-    log.info(f'Copy failed of QGIS example project to {extractRoot}\qgis')
+    log.info(f'Copy failed, QGIS project example does not exist')
 
 
 # Attempt to save the s57 reference docs to the outfolder
@@ -235,15 +247,7 @@ for url in refList:
         print('\tFile exists, not overwritten')
 
 #os.path.join(os.path.split(workspace)[0],r'logfile.log')
-log.basicConfig(filename=logfile,
-                    level=log.DEBUG,
-                    filemode='w',# 'w' = overwrite log file, 'a' = append
-                    format='%(asctime)s,   Line:%(lineno)d %(levelname)s: %(message)s',
-                    datefmt='%a %d/%b/%Y %I:%M:%S %p')
-# Log the path and name of the script used to the logfile
-log.info('Script started: ' + sys.argv[0])
-# Log the parent folder to the logfile
-log.info('Parent folder to find s57 data within: ' + parentFolder)
+
 if extractAlls57FeaturesInData:
     log.info('All available feature types being extracted from the s.57 source data')
 noneTypeGeometry = []
@@ -257,9 +261,9 @@ for featureToExtract in featureToExtractList:
         elif featureType == 'POLYGON':
             geomType = ogr.wkbPolygon
         elif featureType == 'POINT':
-            geomType = ogr.wkbPoint
+            geomType = ogr.wkbPoint25D
         elif featureType == 'MULTIPOINT':
-            geomType = ogr.wkbMultiPoint
+            geomType = ogr.wkbMultiPoint25D
         else:
             sys.exit(f'Feature type not handled: {featureType}')
 
@@ -295,7 +299,8 @@ for featureToExtract in featureToExtractList:
             AttributesOfListType = []
             chartPath = enc
             f = os.path.split(enc)[1]
-            print(f'Chartpath: {chartPath}')
+            if verbose:
+                print(f'Chartpath: {chartPath}')
             chartList.append(chartPath)
             # Use the s57 driver to open the chart
             data = s57Driver.Open(chartPath)
@@ -319,9 +324,9 @@ for featureToExtract in featureToExtractList:
                         print(f'Feature types match: {featureType==layer.GetGeomType}')
                     try:
                         if feat.geometry().GetGeometryName() != featureType:
-                            print(f'Layer of same feature name but not matching geometry type: '
-                                  f'{featureType} != '
-                                  f'{feat.geometry().GetGeometryName()}')
+                            if verbose:
+                                print(f'Layer of same feature name but not matching geometry type: '
+                                      f'{featureType} != {feat.geometry().GetGeometryName()}')
                             continue
 
                     except:
@@ -374,8 +379,8 @@ for featureToExtract in featureToExtractList:
                 # print the ENC layer attribute table schema
                 if verbose:
                     print('\n\tS57 ENC schema:')
-                for field in layer.schema:
-                    if verbose:
+                if verbose:
+                    for field in layer.schema:
                         print(f'\t\t{field.name} (type: {field.GetFieldTypeName(field.GetType())})')
                 # Create the attribute table (fields) according to the layer
                 # schema.
@@ -399,12 +404,14 @@ for featureToExtract in featureToExtractList:
 
                 if verbose:
                     print('\nMemLayer fields post alteration due to safemode:')
-                    for field in memLayer.schema:
+                for field in memLayer.schema:
+                    if verbose:
                         print(f'\t\t{field.name} (type: {field.GetFieldTypeName(field.GetType())})')
-                        if field.GetFieldTypeName(field.GetType()) in ['StringList', 'IntegerList']:
-                            i = memLayer.GetLayerDefn().GetFieldIndex(field.name)
-                            fld_defn = ogr.FieldDefn(field.name, ogr.OFTString)
-                            memLayer.AlterFieldDefn(i, fld_defn, ogr.ALTER_TYPE_FLAG)
+                    if field.GetFieldTypeName(field.GetType()) in ['StringList', 'IntegerList']:
+                        i = memLayer.GetLayerDefn().GetFieldIndex(field.name)
+                        fld_defn = ogr.FieldDefn(field.name, ogr.OFTString)
+                        memLayer.AlterFieldDefn(i, fld_defn, ogr.ALTER_TYPE_FLAG)
+                        if verbose:
                             print(f'\t\t\ttype changed to: {field.GetFieldTypeName(field.GetType())})')
 
                 # type to string within the in-memory layer
@@ -508,11 +515,13 @@ for featureToExtract in featureToExtractList:
                         # print(f'\tFeature geometry: {feature.geometry}')
                         # Transfer the geometry of the s57 source feature
                         geom = feature.geometry()
-                        # if verbose:
-                        print(f'Iteration on field geometry type: {featureType}')
-                        print(f'Feature geometry: {geom}')
-                        print(f'GetGeomName: {feature.geometry().GetGeometryName()}')
-                        print(f'Iteration geometry match feature geometry: {featureType == feature.geometry().GetGeometryName()}')
+                        if verbose:
+                            print(f'Iteration on field geometry type: {featureType}')
+                            print(f'Feature geometry: {geom}')
+                            print(f'X value: {feature.GetGeometryRef().GetX()}')
+                            print(f'Y value: {feature.GetGeometryRef().GetY()}')
+                            print(f'GetGeomName: {feature.geometry().GetGeometryName()}')
+                            print(f'Iteration geometry match feature geometry: {featureType == feature.geometry().GetGeometryName()}')
                         mem_feat.SetGeometry(geom)
                         layerDefinition = layer.GetLayerDefn()
                         if verbose:
@@ -635,7 +644,7 @@ for featureToExtract in featureToExtractList:
                     outSHP = os.path.join(chartExtractFolder, f"{f}.shp")
                     print(f'outShp: {outSHP}')
                     # Append output shapefile to the list to use it later to
-                    # combine all shapefiles into a national shapefile
+                    # combine all shapefiles into a global shapefile
                     chartShapefileList.append(outSHP)
                     shpDriver = ogr.GetDriverByName("ESRI Shapefile")
                     shpDS = shpDriver.CreateDataSource(outSHP)
@@ -672,7 +681,7 @@ for featureToExtract in featureToExtractList:
                     # print(f'AttributeOfListType list: {AttributesOfListType}')
                     # Reset the list as not all ENC files have the same table structure
                     # TODO: may need to check that all schema definitions are the same
-                    #       prior to combining into a national dataset?
+                    #       prior to combining into a global dataset?
                     AttributesOfListType = []
                     # print(f'AttributeOfListType list: {AttributesOfListType}')
                     # sys.exit('Exiting to understand processing')
@@ -681,8 +690,8 @@ for featureToExtract in featureToExtractList:
                     log.error('{f} failed to be converted but contains {featureToExtract}')
 
         log.info('Shapefile conversion for each s57 chart complete')
-        # Convert all the invidual coastline shapefiles into one shapefile
-        print('\nCombining all chart coastline shapefiles to a national shapefile')
+        # Convert all the individual ENC shapefiles into one shapefile
+        print('\nCombining all ENC shapefiles to a global shapefile')
         # If there are no shapefiles generated from charts for the feature/feature type combination then delete the
         # folder for this combination and move on.
         if len(chartList) == 0:
@@ -692,11 +701,11 @@ for featureToExtract in featureToExtractList:
             shutil.rmtree(outFolder)
             continue
 
-        nationalShp = os.path.join(outFolder, f"national_{featureToExtract}_{featureType}.shp")
+        globalShp = os.path.join(outFolder, f"global_{featureToExtract}_{featureType}.shp")
         if verbose:
-            print(f'\t{nationalShp}')
-            log.info(f'nationalShp: {nationalShp}')
-        shpDS = shpDriver.CreateDataSource(nationalShp)
+            print(f'\t{globalShp}')
+            log.info(f'globalShp: {globalShp}')
+        shpDS = shpDriver.CreateDataSource(globalShp)
         # Create line layer to match the CRS of the source data
         # Create spatial reference
         if verbose:
@@ -705,20 +714,20 @@ for featureToExtract in featureToExtractList:
         proj = osr.SpatialReference()
         proj.ImportFromEPSG(4326)
 
-        nationalShpLayer = shpDS.CreateLayer('national', proj, geom_type=geomType)
+        globalShpLayer = shpDS.CreateLayer('global', proj, geom_type=geomType)
         if verbose:
-            print('\tCreated the national shape layer')
-            log.info('Created the national shape layer')
+            print('\tCreated the global shape layer')
+            log.info('Created the global shape layer')
         # Create the attribute table to match the in memory schema
-        nationalShpLayer.CreateFields(memLayer.schema)
+        globalShpLayer.CreateFields(memLayer.schema)
         if verbose:
-            print('\tCreated the schema in the national shapefile')
-            log.info('Created the schema in the national shapefile')
-        nationalShp_defn = nationalShpLayer.GetLayerDefn()
+            print('\tCreated the schema in the global shapefile')
+            log.info('Created the schema in the global shapefile')
+        globalShp_defn = globalShpLayer.GetLayerDefn()
         if verbose:
             print('\tCreating the shp_feature')
             log.info('Creating the shp_feature')
-        shp_feat = ogr.Feature(nationalShp_defn)
+        shp_feat = ogr.Feature(globalShp_defn)
         # Process each chart coastline shapefile
         for shpFile in chartShapefileList:
             # print(f'Processing: {os.path.split(shpFile)[1]}')
@@ -727,18 +736,18 @@ for featureToExtract in featureToExtractList:
             ds = ogr.Open(shpFile)
             lyr = ds.GetLayer()
             for feat in lyr:
-                out_feat = ogr.Feature(nationalShpLayer.GetLayerDefn())
+                out_feat = ogr.Feature(globalShpLayer.GetLayerDefn())
                 out_feat.SetGeometry(feat.GetGeometryRef().Clone())
                 for i in range(feat.GetFieldCount()):
                     value = feat.GetField(i)
                     # if verbose:
                     #     print(f'\t\tSetting field {lyr.schema[i].name} to {value}')
                     out_feat.SetField(i, value)
-                nationalShpLayer.CreateFeature(out_feat)
-                nationalShpLayer.SyncToDisk()
+                globalShpLayer.CreateFeature(out_feat)
+                globalShpLayer.SyncToDisk()
 
-        log.info(f'Composite shapefile complete: {nationalShp}')
-        print(f'\noutFolder for national shape file: {outFolder}')
+        log.info(f'Composite shapefile complete: {globalShp}')
+        print(f'\noutFolder for global shape file: {outFolder}')
         print('\tComposite complete.')
 
         print(f'\n{len(chartsWithFeatureList) + len(chartsNoFeatureList)} charts found')
